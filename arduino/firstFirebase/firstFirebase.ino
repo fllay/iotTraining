@@ -1,7 +1,14 @@
 
 #include "WiFi.h"
 #include <Arduino.h>
-#include <FirebaseESP32.h>
+#if defined(ESP32)
+#include <WiFi.h>
+#elif defined(ESP8266)
+#include <ESP8266WiFi.h>
+#endif
+#include <Firebase_ESP_Client.h>
+
+
 // Provide the token generation process info.
 #include "addons/TokenHelper.h"
 // Provide the RTDB payload printing info and other helper functions.
@@ -36,6 +43,7 @@ int count = 0;
 // Store device authentication status
 bool isAuthenticated = false;
 
+unsigned long sendDataPrevMillis = 0;
 
 
 // The frequency of sensor updates to firebase, set to 10seconds
@@ -82,6 +90,9 @@ void firebase_init() {
 }
 
 
+
+
+
 void setup() {
 
   // Configure pin
@@ -107,34 +118,22 @@ void setup() {
 }
 
 void loop() {
-  // Do nothing
-  // setup() and loop() run in their own task with priority 1 in core 1
-  // on ESP32
-    // Check that 10 seconds has elapsed before, device is authenticated and the
-    // firebase service is ready.
-    if (millis() - elapsedMillis > update_interval && isAuthenticated &&
-        Firebase.ready()) {
-      elapsedMillis = millis();
-      Serial.println("------------------------------------");
-      Serial.println("Set int test...");
-      // Specify the key value for our data and append it to our path
-      String node = "/value";
-      // Send the value our count to the firebase realtime database
-      if (Firebase.set(fbdo, node.c_str(), count++)) {
-        // Print firebase server response
-        Serial.println("PASSED");
-        Serial.println("PATH: " + fbdo.dataPath());
-        Serial.println("TYPE: " + fbdo.dataType());
-        Serial.println("ETag: " + fbdo.ETag());
-        Serial.print("VALUE: ");
-        printResult(fbdo); // see addons/RTDBHelper.h
-        Serial.println("------------------------------------");
-        Serial.println();
-      } else {
-        Serial.println("FAILED");
-        Serial.println("REASON: " + fbdo.errorReason());
-        Serial.println("------------------------------------");
-        Serial.println();
-      }
-    }
+  if (Firebase.ready() && (millis() - sendDataPrevMillis > 15000 || sendDataPrevMillis == 0))
+  {
+    sendDataPrevMillis = millis();
+
+    Serial.printf("Set int... %s\n", Firebase.RTDB.setInt(&fbdo, "/test/int", count) ? "ok" : fbdo.errorReason().c_str());
+
+    Serial.printf("Get int... %s\n", Firebase.RTDB.getInt(&fbdo, "/test/int") ? String(fbdo.intData()).c_str() : fbdo.errorReason().c_str());
+
+    FirebaseJson json;
+    json.add("value", count);
+
+    Serial.printf("Push json... %s\n", Firebase.RTDB.pushJSON(&fbdo, "/test/push", &json) ? "ok" : fbdo.errorReason().c_str());
+
+    json.set("value", count + 100);
+    Serial.printf("Update json... %s\n\n", Firebase.RTDB.updateNode(&fbdo, String("/test/push/" + fbdo.pushName()).c_str(), &json) ? "ok" : fbdo.errorReason().c_str());
+
+    count++;
+  } 
 }
