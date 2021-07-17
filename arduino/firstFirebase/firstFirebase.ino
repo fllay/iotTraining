@@ -16,9 +16,12 @@
 // Device ID
 #define DEVICE_UID "1X"
 // Your Firebase Project Web API Key
-#define API_KEY "AIzaSyARWZzmjIfRLHXU-C5xXONkqSArJCBmDxQ"
+#define API_KEY "AIzaSyCG59xubOTJe2gMqg1hz2NmcLvY_0AK-_M"
 // Your Firebase Realtime database URL
-#define DATABASE_URL "https://esp32-92e64-default-rtdb.asia-southeast1.firebasedatabase.app"
+#define DATABASE_URL "https://esp32-b74d2-default-rtdb.asia-southeast1.firebasedatabase.app/"
+
+const char *ssid = "CAKE";
+const char *password = "0891300633";
 
 // Firebase Realtime Database Object
 FirebaseData fbdo;
@@ -57,8 +60,7 @@ static const int rate_2 = 323; // ms
 static const int led_pin_1 = 2;
 static const int led_pin_2 = 12;
 
-const char *ssid = "CAKE";
-const char *password = "0891300633";
+
 
 
 
