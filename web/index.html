@@ -1,12 +1,12 @@
 <html>
-<title>Firebase Messaging Demo</title>
-<style>
+  <title>Firebase Messaging Demo</title>
+  <style>
     div {
-        margin-bottom: 15px;
+      margin-bottom: 15px;
     }
-</style>
+  </style>
 
-<body>
+  <body>
     <div id="token"></div>
     <div id="msg"></div>
     <div id="notis"></div>
@@ -16,65 +16,72 @@
 
     <script src="https://www.gstatic.com/firebasejs/7.16.1/firebase-messaging.js"></script>
 
-
     <script>
-        MsgElem = document.getElementById('msg');
-        TokenElem = document.getElementById('token');
-        NotisElem = document.getElementById('notis');
-        ErrElem = document.getElementById('err');
+      MsgElem = document.getElementById("msg");
+      TokenElem = document.getElementById("token");
+      NotisElem = document.getElementById("notis");
+      ErrElem = document.getElementById("err");
 
-        // TODO: Replace firebaseConfig you get from Firebase Console
-        var firebaseConfig = {
-            apiKey: "AIzaSyARWZzmjIfRLHXU-C5xXONkqSArJCBmDxQ",
-            authDomain: "esp32-92e64.firebaseapp.com",
-            databaseURL: "https://esp32-92e64-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "esp32-92e64",
-            storageBucket: "esp32-92e64.appspot.com",
-            messagingSenderId: "798807036118",
-            appId: "1:798807036118:web:46fca3fb3ac823a57cb977",
-            measurementId: "G-SW7X6X9VPN"
-        };
-        firebase.initializeApp(firebaseConfig);
+      // TODO: Replace firebaseConfig you get from Firebase Console
+      var firebaseConfig = {
+        apiKey: "AIzaSyCG59xubOTJe2gMqg1hz2NmcLvY_0AK-_M",
+        authDomain: "esp32-b74d2.firebaseapp.com",
+        databaseURL:
+          "https://esp32-b74d2-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "esp32-b74d2",
+        storageBucket: "esp32-b74d2.appspot.com",
+        messagingSenderId: "265654270299",
+        appId: "1:265654270299:web:c4088a6dfcebf180ac827e",
+        measurementId: "G-SV7SY10B8K",
+      };
+      firebase.initializeApp(firebaseConfig);
 
-        const messaging = firebase.messaging();
-        messaging
-            .requestPermission()
-            .then(function () {
-                MsgElem.innerHTML = 'Notification permission granted.';
-                console.log('Notification permission granted.');
+      const messaging = firebase.messaging();
+      console.log(messaging);
 
-                // get the token in the form of promise
-                return messaging.getToken();
-            })
-            .then(function (token) {
-                TokenElem.innerHTML = 'Device token is : <br>' + token;
-            })
-            .catch(function (err) {
-                ErrElem.innerHTML = ErrElem.innerHTML + '; ' + err;
-                console.log('Unable to get permission to notify.', err);
-            });
+      // Service Worker explicit registration to explicitly define sw location at a path
+      const swRegistration = async () => {
+        try {
+          await navigator.serviceWorker.register(
+            "firebase-messaging-sw.js"
+          );
+        } catch (error) {
+          console.error(error);
+        }
+      };
 
-        let enableForegroundNotification = true;
-        messaging.onMessage(function (payload) {
-            console.log('Message received. ', payload);
-            NotisElem.innerHTML =
-                NotisElem.innerHTML + JSON.stringify(payload);
-
-            if (enableForegroundNotification) {
-                let notification = payload.notification;
-                navigator.serviceWorker
-                    .getRegistrations()
-                    .then((registration) => {
-                        registration[0].showNotification(notification.title);
-                    });
-            }
+      messaging
+        .getToken({
+          serviceWorkerRegistration: swRegistration,
+          vapidKey:
+            "BBX2c3Bejjuj4WDEOHiBUYQt8VLde9-nnf2mdc8XDRz6173_MbYUgvOz1XqW5DtX8WaH5hIpoj_fgXXTejEDCew",
+        })
+        .then((currentToken) => {
+          if (currentToken) {
+            console.log(currentToken);
+          } else {
+            console.log(
+              "No registration token available. Request permission to generate one."
+            );
+            askForPermissioToReceiveNotifications();
+          }
+        })
+        .catch((err) => {
+          console.log("An error occurred while retrieving token. ", err);
         });
+
+      let enableForegroundNotification = true;
+      messaging.onMessage(function (payload) {
+        console.log("Message received. ", payload);
+        NotisElem.innerHTML = NotisElem.innerHTML + JSON.stringify(payload);
+
+        if (enableForegroundNotification) {
+          let notification = payload.notification;
+          navigator.serviceWorker.getRegistrations().then((registration) => {
+            registration[0].showNotification(notification.title);
+          });
+        }
+      });
     </script>
-</body>
-
+  </body>
 </html>
-
-
-
-
-
